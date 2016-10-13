@@ -61,10 +61,14 @@ void cross_product(const double *v1, const double *v2, double *out)
 static inline
 double dot_product(const double *v1, const double *v2)
 {
+#ifdef DOT_PRODUCT_LOOP_UNROLLING_OPTIMIZATION
+    return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+#else
     double dp = 0.0;
     for (int i = 0; i < 3; i++)
         dp += v1[i] * v2[i];
     return dp;
+#endif
 }
 
 static inline

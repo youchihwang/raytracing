@@ -5,6 +5,7 @@
 
 #include "primitives.h"
 #include "raytracing.h"
+#include "computeci.h"
 
 #define OUT_FILENAME "out.ppm"
 
@@ -39,6 +40,10 @@ int main()
     sphere_node spheres = NULL;
     color background = { 0.0, 0.1, 0.1 };
     struct timespec start, end;
+    double time_spend[SAMPLE_SIZE];
+    double max;
+    double min;
+    int i = 0;
 
 #include "use-models.h"
 
@@ -47,11 +52,18 @@ int main()
     if (!pixels) exit(-1);
 
     printf("# Rendering scene\n");
-    /* do the ray tracing with the given geometry */
-    clock_gettime(CLOCK_REALTIME, &start);
-    raytracing(pixels, background,
-               rectangulars, spheres, lights, &view, ROWS, COLS);
-    clock_gettime(CLOCK_REALTIME, &end);
+    for (i = 0; i < SAMPLE_SIZE; i++) {
+        /* do the ray tracing with the given geometry */
+        clock_gettime(CLOCK_REALTIME, &start);
+        raytracing(pixels, background,
+                   rectangulars, spheres, lights, &view, ROWS, COLS);
+        clock_gettime(CLOCK_REALTIME, &end);
+        time_spend[i] = (double)(end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec)/ONE_SEC;
+        //printf("i %d %lf\n", i, time_spend[i]);
+    }
+    printf("mean : %lf\n", compute_ci(&min, &max, time_spend));
+
+    //fprintf(fp, "%lf %lf\n", min, max);
     {
         FILE *outfile = fopen(OUT_FILENAME, "wb");
         write_to_ppm(outfile, pixels, ROWS, COLS);
@@ -64,5 +76,6 @@ int main()
     free(pixels);
     printf("Done!\n");
     printf("Execution time of raytracing() : %lf sec\n", diff_in_second(start, end));
+
     return 0;
 }
